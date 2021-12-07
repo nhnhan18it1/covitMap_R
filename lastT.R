@@ -198,3 +198,14 @@ m
 
 tkpa <- json_data %>% filter(quan_huyen=="Thanh Khê") 
 tkpa %>% count(tinh_trang)
+if(!require(lubridate)) install.packages("lubridate", repos = "http://cran.us.r-project.org")
+library(dplyr)
+library(ggplot2)
+library(gapminder)
+
+json_data$ngay_cong_bo <- as.Date(json_data$ngay_cong_bo, "%d/%m/%Y")
+
+plotdt <- json_data %>% mutate(month = format(ngay_cong_bo, "%m"), year = format(ngay_cong_bo, "%Y")) %>%
+  group_by(month, year) %>% count(month)
+print(plotdt)
+ggplot(plotdt, aes(x=month, y=n,group=1)) + geom_line() + geom_point()
