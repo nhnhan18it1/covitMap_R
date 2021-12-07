@@ -73,7 +73,7 @@ shinyUI(bootstrapPage(
                   # plotOutput("cumulative_plot", height="130px", width="100%"),
                   
                   dateInput("date", "Date:", value = "2021-11-28",
-                            datesdisabled = c("2012-03-01", "2012-03-02"))
-                  
+                            datesdisabled = c("2012-03-01", "2012-03-02")),
+                  actionButton("all_time", "All time")
     )
 ))
