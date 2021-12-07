@@ -390,5 +390,110 @@ shinyServer(function(input, output) {
             
         }
     })
-
+    observeEvent(input$dateRange,{
+        print(input$dateRange)
+        json_data$ngay_cong_bo <- as.Date(json_data$ngay_cong_bo, "%d/%m/%Y")
+        dtPatientByDay <- json_data %>% filter(ngay_cong_bo >= input$dateRange[1],ngay_cong_bo <= input$dateRange[2])
+        print(length(dtPatientByDay))
+        m <- leafletProxy("MapPlot1")%>%
+            clearShapes()
+        for (row in 1:nrow(distrit_data)) {
+            polygonStr <- distrit_data[row, "polygon"]
+            mo_ta <- distrit_data[row, "mo_ta"]
+            ma_mau <- distrit_data[row, "ma_mau"]
+            xa_phuong <- distrit_data[row, "xa_phuong"]
+            vtpoly = vectorize_fromJSON(polygonStr)
+            a <- list()
+            for (i in seq(1,length(vtpoly)/2,by=1)) {
+                p <- c(vtpoly[length(vtpoly)/2+i],vtpoly[i])
+                a <- append(a,list(p))
+            }
+            geoj <- list(
+                type = "Feature",
+                geometry = list(
+                    type = "MultiPolygon",
+                    coordinates = list(list(a))
+                ),
+                properties = list(
+                    name = xa_phuong,
+                    population = 48000,
+                    # You can inline styles if you want
+                    style = list(
+                        popup = mo_ta,
+                        fillColor = ma_mau,
+                        fillOpacity=0.1,
+                        weight = 2,
+                        color = "#000000"
+                    )
+                ),
+                id = xa_phuong
+            )
+            # m <- m %>% addMarkers(lat = a[[1]][2],lng = a[[1]][1],popup=xa_phuong)
+            m <- m %>% addGeoJSON(geoj)
+            
+            
+        }
+        
+        for (row in 1:nrow(area_data)) {
+            polygonStr <- area_data[row, "polygon"]
+            name <- area_data[row, "name"]
+            filterVal <- area_data[row, "filterValue"]
+            tkpa <- dtPatientByDay %>% filter(quan_huyen==filterVal) 
+            tkpa<-tkpa %>% count(tinh_trang)
+            infor <- ""
+            for(i in 1:nrow(tkpa)) {
+                
+                infor <- paste(infor,"<strong>",tkpa$tinh_trang[i],": ",tkpa$n[i],"<strong/><br/>")
+            }
+            print(filterVal)
+            
+            colorPA <- "#571B7E"
+            if (sum(tkpa$n)<=100) {
+                colorPA<-"#77D4A5"
+            }
+            if (sum(tkpa$n)>100 && sum(tkpa$n)<=300) {
+                colorPA<-"#FFC125"
+            }
+            if (sum(tkpa$n)>300 && sum(tkpa$n)<=500) {
+                colorPA<-"#8A4117"
+            }
+            if (sum(tkpa$n)>500 && sum(tkpa$n)<=800) {
+                colorPA<-"#7D0552"
+            }
+            color_hex_background <- area_data[row, "color_hex_background"]
+            vtpoly = vectorize_fromJSON(polygonStr)
+            lat <- c()
+            lng <- c()
+            
+            # print(length(vtpoly))
+            for (i in seq(1,length(vtpoly)/2,by=1)) {
+                lat <- c(lat,vtpoly[i])
+                lng <- c(lng,vtpoly[length(vtpoly)/2+i])
+            }
+            # print(length(lat))
+            if (length(lat)==7) {
+                return()
+            }
+            label <- paste("<h4>",name,"</h4><br/><strong>số ca nhiễm:", sum(tkpa$n) ," </strong><br/>",infor)
+            # print(label)
+            
+            
+            m %>% addPolygons(
+                c(lng),
+                c(lat),
+                fillColor = colorPA,
+                fillOpacity=0.5,
+                weight = 2,
+                color = "#000000",
+                group = "area plot",
+                label = label%>%lapply(htmltools::HTML),
+                labelOptions = labelOptions(
+                    style = list("font-weight" = "normal", padding = "3px 8px", "color" = "black"),
+                    textsize = "15px", direction = "auto")
+            )
+            
+            
+            
+        }
+    })
 })

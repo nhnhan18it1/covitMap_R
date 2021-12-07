@@ -72,6 +72,11 @@ shinyUI(bootstrapPage(
                   # plotOutput("epi_curve", height="130px", width="100%"),
                   # plotOutput("cumulative_plot", height="130px", width="100%"),
                   
+                  dateRangeInput('dateRange',
+                                 label = 'Date range input: yyyy-mm-dd',
+                                 start = Sys.Date() - 2, end = Sys.Date() + 2
+                  ),
+                  
                   dateInput("date", "Date:", value = "2021-11-28",
                             datesdisabled = c("2012-03-01", "2012-03-02")),
                   actionButton("all_time", "All time")
